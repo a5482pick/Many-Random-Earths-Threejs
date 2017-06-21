@@ -4,5 +4,5 @@ The camera is forced to always look straight ahead (rather than at the centre of
 
 Additionally provided is code that makes the 'earth' that is pointed to by the cursor glow green, and also code that logs the cursor's screen coordinates each time a new one of these cursor intersections occurs.
 
-NOTES: For smoother motion control with the mouse, it may help to comment-out the line 'scope.object.lookAt( scope.target );' from _OrbitControls.js_. 
+NOTE: For smoother motion control with the mouse, it may help to comment-out the line 'scope.object.lookAt( scope.target );' from _OrbitControls.js_. 
 
