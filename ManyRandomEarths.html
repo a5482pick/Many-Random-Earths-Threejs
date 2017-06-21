@@ -19,7 +19,7 @@
 
     <script>
     
-        var container, renderer, camera, scene, controls, light, textureLoader, geometry, screenXCoord, raycaster, originalLightY;
+        var container, renderer, camera, scene, controls, light, textureLoader, geometry, raycaster, originalLightY;
         var intersects, intersectedObject, widthHalf, heightHalf;
 
 	var mouse = new THREE.Vector2();
@@ -94,9 +94,7 @@
 
                   //A new material for each sphere.
                   materialNew.push(new THREE.MeshPhongMaterial({
-                                     color:Math.random()*0xffffff,
-                                     roughness:0.5, 
-                                     metalness:1.0, 
+                                     color:Math.random()*0xffffff,  
                                      map:textures[i]
                   }));
                                         
@@ -166,8 +164,8 @@
              //It is an array of the intersected objects grouped with some of their property values.
 	     intersects = raycaster.intersectObjects(scene.children);
 
-             //If something is intersected:
-             if (intersects.length > 10) { 
+             //If something is intersected: (Set '>0' to '>10' if wish to bypass the intersection code.)
+             if (intersects.length > 0) { 
 
                   //... and if it is a new intersection:
 		  if (intersectedObject != intersects[0].object) {
@@ -182,8 +180,7 @@
 		       intersectedObject = intersects[0].object;
 
                        //Calculate the screen coordinate of the object that intersects the mouse.
-                       screenXCoord = screenCoords(intersectedObject).x;
-                       //alert(screenXCoord);
+                       screenCoords(intersectedObject);
 
                        //... store the original colour of the newly intersected object...
 		       intersectedObject.currentHex = intersectedObject.material.emissive.getHex();
@@ -231,7 +228,8 @@
              vector.x = ( vector.x * widthHalf ) + widthHalf;
              vector.y = -( vector.y * heightHalf ) + heightHalf;
 
-             return vector;
+             //'vetor' stores the intersected object's x,y screen coordinates.
+             console.log(vector.x);
         }
 
     </script>

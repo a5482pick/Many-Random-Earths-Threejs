@@ -2,6 +2,10 @@ __ManyRandomEarths.html__ creates 70 randomly positioned and randomly coloured s
 
 The camera is forced to always look straight ahead (rather than at the centre of the scene), thus creating the _sense_ that the collection of spheres is translating rather than rotating. &nbsp;The camera's motion is oscillatory.
 
-For smoother motion control with the mouse, it may help to comment-out the line 'scope.object.lookAt( scope.target );' from _OrbitControls.js_. 
+Additionally provided is code that makes the 'earth' that is pointed to by the cursor glow green, and also code that logs the cursor's screen coordinates each time a new one of these cursor intersections occurs.
 
-NOTE: There is a delay of a few seconds before smooth rendering begins. &nbsp;(Loading all the textures causes this delay.)
+NOTES: For smoother motion control with the mouse, it may help to comment-out the line 'scope.object.lookAt( scope.target );' from _OrbitControls.js_. 
+
+For metallic effects, change _MeshPhongMaterial_ to _MeshStandardMaterial_ and add 'metalness : 1.0' as a property in the constructor.
+
+Finally, not that **there is a delay of a few seconds** before smooth rendering begins. &nbsp;(Loading all the textures causes this delay.)
