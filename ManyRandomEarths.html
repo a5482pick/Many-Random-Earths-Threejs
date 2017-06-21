@@ -20,11 +20,10 @@
     <script>
     
         var container, renderer, camera, scene, controls, light, textureLoader, geometry, raycaster, originalLightY;
-        var intersects, intersectedObject, widthHalf, heightHalf;
+        var textures, texturesBump, texturesSpec, intersects, intersectedObject, widthHalf, heightHalf;
 
 	var mouse = new THREE.Vector2();
         var objectArray = [];
-        var textures = [];
         var materialNew = [];
         var vector = new THREE.Vector3();
 	
@@ -33,7 +32,7 @@
         var camLookAt = new THREE.Vector3(0,1,0);
 
 
-        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+        document.addEventListener('mousemove', onDocumentMouseMove, false);
 
 	init();
 
@@ -51,7 +50,7 @@
 				
 	     container.appendChild(renderer.domElement);
 
-	     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 10000);
+	     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
      
 	     scene = new THREE.Scene();
 
@@ -84,20 +83,33 @@
              //Will create many spheres.
 	     geometry = new THREE.SphereBufferGeometry( 8, 32, 32 );
 
+             //We only need one texture per image, not per sphere, because all spheres will use the same texture.
              textureLoader = new THREE.TextureLoader();
+ 
+             textures = textureLoader.load("earth.jpg");
+
+             texturesBump = textureLoader.load("earthBump.jpg");
+
+             texturesSpec = textureLoader.load("earthSpec.jpg");
+
 
              //Create many spherical earths, each earth with a random applied colour.
 	     for (var i = 0; i < 70; i ++) {
+           
 
-                  //A new texture for each sphere.
-                  textures.push(textureLoader.load("earth.jpg"));
+                  //A new material for each sphere.  (Can also set the properties after instantiation instead.)
+                  //It's not necessary to store all objects in an array, but doing so can help if adding code.               
+                  materialNew.push(new THREE.MeshStandardMaterial({
 
-                  //A new material for each sphere.
-                  materialNew.push(new THREE.MeshPhongMaterial({
-                                     color:Math.random()*0xffffff,  
-                                     map:textures[i]
+                                     color:new THREE.Color(Math.random() * 0xffffff),
+                                     roughness:0.5,
+                                     metalness:0.1,
+                                     map:textures,
+                                     bumpMap:texturesBump,
+                                     metalnessMap:texturesSpec
                   }));
-                                        
+           
+  
                   //A new 'mesh' for each sphere.
                   objectArray.push(new THREE.Mesh(geometry, materialNew[i]));
 
