@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+	body {
+		font-family: Monospace;
+		background-color: #f0f0f0;
+		margin: 0px;
+		overflow: hidden;
+	     }
+    </style>
+</head>
+
+<body>
+
+    <script src="three.js"></script>
+    <script src="OrbitControls.js"></script>
+
+    <script>
+    
+        var container, renderer, camera, scene, controls, light, textureLoader, geometry, screenXCoord, raycaster, originalLightY;
+        var intersects, intersectedObject, widthHalf, heightHalf;
+
+	var mouse = new THREE.Vector2();
+        var objectArray = [];
+        var textures = [];
+        var materialNew = [];
+        var vector = new THREE.Vector3();
+	
+        var radius = 100, theta = 0;
+
+        var camLookAt = new THREE.Vector3(0,1,0);
+
+
+        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+	init();
+
+	animate();
+
+
+	function init() {
+				
+             container = document.createElement('div');
+             document.body.appendChild(container);
+
+             renderer = new THREE.WebGLRenderer();
+             renderer.setPixelRatio(window.devicePixelRatio);
+	     renderer.setSize(window.innerWidth, window.innerHeight);
+				
+	     container.appendChild(renderer.domElement);
+
+	     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 10000);
+     
+	     scene = new THREE.Scene();
+
+             //Add camera on z-axis.
+             camera.position.x = 0;
+             camera.position.y = 0;
+             camera.position.z = 1.3 * radius;
+
+             scene.add(camera);
+                   
+             //Add point light source on the y-axis.             
+             light = new THREE.PointLight(0xffffff, 2);
+	     light.position.set( 0, 100, 0 );
+
+             //The light source will move, so store light's original position.
+             originalLightY = light.position.y;
+  
+             //Allow shadows.
+             renderer.shadowMap.enabled = true;	
+             light.castShadow = true;
+                                
+	     scene.add(light);
+
+             //Allow shadowed objects to be slightly visible.
+             scene.add(new THREE.AmbientLight(0xffffff, 0.05));
+
+             //Mouse controls.
+             controls = new THREE.OrbitControls(camera);                        
+
+             //Will create many spheres.
+	     geometry = new THREE.SphereBufferGeometry( 8, 32, 32 );
+
+             textureLoader = new THREE.TextureLoader();
+
+             //Create many spherical earths, each earth with a random applied colour.
+	     for (var i = 0; i < 70; i ++) {
+
+                  //A new texture for each sphere.
+                  textures.push(textureLoader.load("earth.jpg"));
+
+                  //A new material for each sphere.
+                  materialNew.push(new THREE.MeshPhongMaterial({
+                                     color:Math.random()*0xffffff,
+                                     roughness:0.5, 
+                                     metalness:1.0, 
+                                     map:textures[i]
+                  }));
+                                        
+                  //A new 'mesh' for each sphere.
+                  objectArray.push(new THREE.Mesh(geometry, materialNew[i]));
+
+                  //A random position for each sphere.
+		  objectArray[i].position.x = Math.random() * 200 - 100;
+		  objectArray[i].position.y = Math.random() * 200 - 100;
+		  objectArray[i].position.z = Math.random() * 200 - 100;
+		  objectArray[i].needsUpdate = true;
+                                
+		  scene.add(objectArray[i]);
+          
+                  //Allow the spheres to cast and receive shadows.
+                  objectArray[i].castShadow = true;
+                  objectArray[i].receiveShadow = true;
+             }
+
+             //Will be used if wish to log screen coordinates of each 'earth' object.
+             raycaster = new THREE.Raycaster();
+        
+        }//End function init().
+
+        //Log the mouse cursor's position.
+        function onDocumentMouseMove( event ) {
+	
+             event.preventDefault();
+	     
+             mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	     mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+        }
+
+	
+        function animate() {
+				
+             requestAnimationFrame( animate );
+	     render();				
+        }
+
+
+	function render() {
+
+             //Increment for each render loop.
+             theta += 0.4;
+
+             //Allow the point light to move around the scene.
+             light.position.x = 5*originalLightY * Math.sin(theta/10);
+             light.position.y = 5*originalLightY * Math.cos(theta/10);
+
+             //Allow the camera to oscillate from one side to another.
+	     camera.position.x = -1.1*radius * Math.sin(THREE.Math.degToRad(theta));
+
+             //Force the camera to not look at the scene, but to look straight ahead instead.
+             camLookAt.x = camera.position.x;
+             camLookAt.y = camera.position.y;
+             camLookAt.z = camera.position.z;
+             
+             camera.lookAt(camLookAt);   
+             camera.updateMatrixWorld();  
+
+
+	     //Register intersections for a ray from camera to mouse.
+	     raycaster.setFromCamera(mouse, camera);
+
+             //'intersects' is Array instance like this: [ { distance, point, face, faceIndex, indices, object }, ... ].
+             //It is an array of the intersected objects grouped with some of their property values.
+	     intersects = raycaster.intersectObjects(scene.children);
+
+             //If something is intersected:
+             if (intersects.length > 10) { 
+
+                  //... and if it is a new intersection:
+		  if (intersectedObject != intersects[0].object) {
+
+                       //... then reset the colour of any previously intersected object to its original value.
+		       if (intersectedObject)  {
+
+                            intersectedObject.material.emissive.setHex(intersectedObject.currentHex);
+                       }
+
+                       //... and register the new intersected object.
+		       intersectedObject = intersects[0].object;
+
+                       //Calculate the screen coordinate of the object that intersects the mouse.
+                       screenXCoord = screenCoords(intersectedObject).x;
+                       //alert(screenXCoord);
+
+                       //... store the original colour of the newly intersected object...
+		       intersectedObject.currentHex = intersectedObject.material.emissive.getHex();
+
+		       //... and set the newly intersected object to green.
+		       intersectedObject.material.emissive.setHex(0x00ff00);
+	          }
+                                        
+                  //(... but if there's an intersection and it's not a new one... then do nothing.)       
+             } 
+
+             //... but if not intersecting anything:
+             else {
+                                        
+                  //...if was originally intersecting an object:
+                  if (intersectedObject) {
+
+                       //...reset that object to its original colour.
+                       intersectedObject.material.emissive.setHex(intersectedObject.currentHex);
+                  }
+                                       
+                  //... in either case, ensure intersectedObject now returns to 'null'. 
+		  intersectedObject = null;
+             }
+
+	     renderer.render(scene, camera);
+
+	}//end function render().
+
+
+        //Calculate screen coordinates.
+        function screenCoords(object) {
+
+             //var qua = new THREE.Quaternion();
+             //var sca = new THREE.Vector3();
+
+             vector.setFromMatrixPosition(object.matrixWorld);   
+             //object.matrixWorld.decompose(vector,qua,sca);            
+
+             vector.project(camera);
+        
+             widthHalf = window.innerWidth/2;
+             heightHalf = window.innerHeight/2;
+    
+             vector.x = ( vector.x * widthHalf ) + widthHalf;
+             vector.y = -( vector.y * heightHalf ) + heightHalf;
+
+             return vector;
+        }
+
+    </script>
+
+</body>
+
+</html>
